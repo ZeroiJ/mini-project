@@ -68,7 +68,7 @@ public class ApiController {
     double lat=Double.parseDouble(String.valueOf(b.get("lat"))), lng=Double.parseDouble(String.valueOf(b.get("lng")));
     double d = geo.meters(s.classroomLat,s.classroomLng,lat,lng);
     if(d > s.radiusMeters) return ResponseEntity.status(422).body(Map.of("error","out of range","distanceMeters",d));
-    Record r = new Record(); r.sessionId=s.id; r.studentId=u.id; r.lat=lat; r.lng=lng; r.distanceMeters=d;
+    AttendanceRecord r = new AttendanceRecord(); r.sessionId=s.id; r.studentId=u.id; r.lat=lat; r.lng=lng; r.distanceMeters=d;
     try{ records.save(r); }catch(Exception e){ return ResponseEntity.status(409).body(Map.of("error","already marked")); }
     return ResponseEntity.ok(Map.of("ok",true,"distanceMeters",d));
   }

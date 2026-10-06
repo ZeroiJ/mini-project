@@ -3,7 +3,7 @@ import jakarta.persistence.*;
 import java.time.Instant;
 @Entity @Table(name="attendance_records",
   uniqueConstraints=@UniqueConstraint(columnNames={"sessionId","studentId"}))
-public class Record {
+public class AttendanceRecord {
   @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;
   public Long sessionId; public Long studentId;
   public double lat; public double lng; public double distanceMeters;

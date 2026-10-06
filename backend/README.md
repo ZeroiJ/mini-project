@@ -1,0 +1,2 @@
+-- Backend smoke check (no framework): Haversine sanity.
+-- 19.0760,72.8777 -> 19.0761,72.8778 ~= 15m, must be < 100m radius.

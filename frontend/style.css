@@ -1,0 +1,154 @@
+/* Attend — classic boxy black/white UI.
+   Tokens from ui-ux-pro-max design system (Minimalism/Swiss, zinc monochrome).
+   Brief pins strict B/W: no accent color. Destructive red used for errors only. */
+:root {
+  --ink: #09090B;
+  --primary: #18181B;
+  --paper: #FFFFFF;
+  --bg: #FAFAFA;
+  --hairline: #E4E4E7;
+  --muted: #475569;
+  --danger: #DC2626;
+  --font-body: "Fira Sans", -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-mono: "Fira Code", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+}
+::selection { background: var(--ink); color: var(--paper); }
+
+/* Masthead: one black anchor bar per page. */
+.masthead {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 14px 16px;
+}
+.masthead .wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+.masthead h1 { font-size: 18px; margin: 0; font-weight: 700; letter-spacing: -0.02em; }
+.masthead a { color: var(--paper); font-size: 14px; }
+.masthead a:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+
+/* Page column. */
+.page { max-width: 640px; margin: 0 auto; padding: 20px 16px 48px; }
+
+/* Box: the only container. Flat, square, 1px black border. */
+.box {
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  padding: 16px;
+  margin: 0 0 16px 0;
+}
+.box > h2:first-child { margin-top: 0; }
+h2 { font-size: 24px; letter-spacing: -0.02em; margin: 0 0 12px 0; }
+p { margin: 0 0 12px 0; }
+.muted { color: var(--muted); font-size: 14px; }
+code, .token {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  background: var(--bg);
+  border: 1px solid var(--hairline);
+  padding: 1px 6px;
+  border-radius: 0;
+}
+.num { font-variant-numeric: tabular-nums; }
+
+/* Forms: real labels, 44px targets, square black-bordered inputs. */
+label {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  margin: 12px 0 4px 0;
+}
+label:first-child { margin-top: 0; }
+input[type="text"], input[type="password"], input[type="number"] {
+  display: block;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  font: inherit;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--ink);
+  border-radius: 0;
+}
+input:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 1px;
+}
+.row { display: flex; gap: 12px; flex-wrap: wrap; }
+.row > div { flex: 1 1 160px; min-width: 0; }
+
+/* Buttons: one loud voice (black), one quiet voice (white/black border). */
+.btn {
+  display: inline-block;
+  min-height: 44px;
+  padding: 10px 18px;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+  border-radius: 0;
+  border: 1px solid var(--ink);
+  background: var(--ink);
+  color: var(--paper);
+}
+.btn-quiet { background: var(--paper); color: var(--ink); }
+.btn-block { display: block; width: 100%; margin-top: 16px; }
+.btn-row { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.btn:focus-visible, a:focus-visible {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+.btn[disabled] { opacity: 0.55; cursor: default; }
+
+/* Status + error. Errors name problem + recovery (craft floor: copy). */
+.status {
+  border: 1px solid var(--ink);
+  padding: 10px 12px;
+  margin-top: 12px;
+  font-weight: 700;
+}
+.error { color: var(--danger); font-weight: 700; margin-top: 12px; }
+
+/* Records: bordered table, black header row. */
+table.records { width: 100%; border-collapse: collapse; margin-top: 12px; }
+table.records th, table.records td {
+  border: 1px solid var(--ink);
+  padding: 8px 10px;
+  text-align: left;
+  font-size: 15px;
+}
+table.records th { background: var(--ink); color: var(--paper); }
+table.records td.num { font-family: var(--font-mono); font-size: 14px; }
+ul.records { list-style: none; margin: 12px 0 0 0; padding: 0; }
+ul.records li {
+  border: 1px solid var(--ink);
+  border-top-width: 0;
+  padding: 8px 10px;
+}
+ul.records li:first-child { border-top-width: 1px; }
+
+/* QR sits in a plain bordered box. */
+.qr { border: 1px solid var(--ink); padding: 12px; display: inline-block; margin: 12px 0; }
+.qr img { display: block; }
+.countdown { font-family: var(--font-mono); font-weight: 700; }
+
+@media (max-width: 480px) {
+  .page { padding: 16px 12px 40px; }
+  .btn-row .btn { flex: 1 1 100%; text-align: center; }
+}

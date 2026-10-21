@@ -39,10 +39,12 @@ async function useMyLocation(){
 async function start(){
  document.getElementById("e").textContent="";
  try{
- const j=await api("/api/sessions",{method:"POST",body:JSON.stringify({subject:sub.value,durationMinutes:+dur.value,lat:+lat.value||19.076,lng:+lng.value||72.8777,radius:+rad.value})});
+ const body={subject:sub.value,durationMinutes:+dur.value,lat:+lat.value||19.076,lng:+lng.value||72.8777,radius:+rad.value||100};
+ const j=await api("/api/sessions",{method:"POST",body:JSON.stringify(body)});
  sid=j.id;
  document.getElementById("outbox").hidden=false;
  document.getElementById("out").innerHTML=`<p>Token: <span class="token">${j.token}</span> | ends <span class="num">${j.endsAt}</span></p>
+ <p class="muted">Classroom <span class="num">${Number(body.lat).toFixed(4)}, ${Number(body.lng).toFixed(4)}</span> · radius <span class="num">${body.radius} m</span></p>
  <div class="qr"><img width="220" height="220" alt="QR code for student check-in" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(j.qrUrl)}"></div>
  <p><a href="${j.qrUrl}">${j.qrUrl}</a></p><p class="countdown" id="cd" role="status"></p>
  <div class="btn-row"><button class="btn btn-quiet" onclick="load()">Refresh list</button>

@@ -14,9 +14,12 @@ assert.strictEqual(inline.length, 1, 'expected exactly one inline script in stud
 
 const el = () => ({ textContent: '', innerHTML: '', hidden: false, disabled: false });
 
-function makeSandbox(queue) {
+function makeSandbox(queue, opts = {}) {
   const els = { s: el(), go: el(), m: el(), e: el() };
   const calls = [];
+  const attendance = opts.attendance || { status: 200, body: { ok: true, distanceMeters: 23.78 } };
+  const session = opts.session || { status: 200, body: { subject: 'FSJP', endsAt: '2026-10-21T10:55:08Z', expired: false, radiusMeters: 100 } };
+  const coords = opts.coords || { latitude: 19.0761, longitude: 72.8779 };
   const geoError = code => ({ code, message: 'stub', PERMISSION_DENIED: 1, POSITION_UNAVAILABLE: 2, TIMEOUT: 3 });
   const sandbox = {
     console, URLSearchParams,
@@ -27,20 +30,18 @@ function makeSandbox(queue) {
     alert: () => {},
     navigator: {
       geolocation: {
-        getCurrentPosition(ok, err, opts) {
-          calls.push({ opts, ok, err });
+        getCurrentPosition(ok, err, geoOpts) {
+          calls.push({ opts: geoOpts, ok, err });
           const step = queue.shift();
           if (!step) return;                       // never calls back -> the old hang
-          if (step === 'ok') ok({ coords: { latitude: 19.0761, longitude: 72.8779 } });
+          if (step === 'ok') ok({ coords });
           else err(geoError(step));
         },
       },
     },
     fetch: async url => {
-      const body = String(url).includes('/api/attendance')
-        ? { ok: true, distanceMeters: 23.78 }
-        : { subject: 'FSJP', endsAt: '2026-10-21T10:55:08Z', expired: false };
-      return { ok: true, status: 200, json: async () => body };
+      const res = String(url).includes('/api/attendance') ? attendance : session;
+      return { ok: res.status === 200, status: res.status, json: async () => res.body };
     },
     ...els,
   };
@@ -63,9 +64,12 @@ const tick = () => new Promise(r => setTimeout(r, 0));
     assert.ok(Number.isFinite(a.calls[0].opts.timeout) && a.calls[0].opts.timeout > 0, 'timeout must be finite and positive');
   });
   check('success shows the distance and re-enables the button', () => {
-    assert.match(a.els.m.textContent, /Present\. 24m from classroom\./);
+    assert.match(a.els.m.textContent, /Present\. 24 m from classroom\./);
     assert.strictEqual(a.els.go.disabled, false);
     assert.strictEqual(a.calls.length, 1);
+  });
+  check('session info shows the radius the QR session actually uses', () => {
+    assert.match(a.els.s.innerHTML, /radius <span class="num">100 m<\/span>/);
   });
 
   // B. the reported bug: high-accuracy times out -> fast fallback, no hang
@@ -101,7 +105,37 @@ const tick = () => new Promise(r => setTimeout(r, 0));
     assert.strictEqual(d.els.go.disabled, false);
   });
 
-  // E. no geolocation call anywhere in the frontend may omit a finite timeout
+  // E. out of range: show how far, and the radius the session uses
+  const e = makeSandbox(['ok'], { attendance: { status: 422, body: { error: 'out of range', distanceMeters: 2400, radiusMeters: 500 } } });
+  await tick(); await e.sandbox.mark();
+  check('out of range reports the real distance and allowed radius', () => {
+    assert.match(e.els.m.textContent, /you are 2\.4 km from the classroom/);
+    assert.match(e.els.m.textContent, /allowed 500 m/);
+    assert.strictEqual(e.els.go.disabled, false);
+    assert.strictEqual(e.els.m.hidden, false);
+  });
+
+  // F. a coarse network fix is called out, so a 600 m error is not mistaken for being in the wrong room
+  const f = makeSandbox(['ok'], {
+    attendance: { status: 422, body: { error: 'out of range', distanceMeters: 612.4, radiusMeters: 500 } },
+    coords: { latitude: 19.08, longitude: 72.87, accuracy: 1500 },
+  });
+  await tick(); await f.sandbox.mark();
+  check('poor GPS accuracy is reported alongside the distance', () => {
+    assert.match(f.els.m.textContent, /612 m/);
+    assert.match(f.els.m.textContent, /accurate to ±1500 m/);
+  });
+
+  // G. errors that are not about distance must not tell the student to walk closer
+  const g = makeSandbox(['ok'], { attendance: { status: 409, body: { error: 'already marked' } } });
+  await tick(); await g.sandbox.mark();
+  check('duplicate check-in does not blame the distance', () => {
+    assert.match(g.els.m.textContent, /already marked/);
+    assert.doesNotMatch(g.els.m.textContent, /Move closer/);
+    assert.strictEqual(g.els.go.disabled, false);
+  });
+
+  // H. no geolocation call anywhere in the frontend may omit a finite timeout
   check('frontend never calls getCurrentPosition without a finite timeout', () => {
     for (const f of fs.readdirSync(FRONTEND).filter(f => f.endsWith('.js') || f.endsWith('.html'))) {
       const src = fs.readFileSync(path.join(FRONTEND, f), 'utf8');

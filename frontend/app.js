@@ -5,7 +5,7 @@ async function api(path, opts={}){
   if(t) opts.headers["X-User-Token"] = t;
   const r = await fetch(API_BASE+path, opts);
   const j = await r.json().catch(()=>({}));
-  if(!r.ok) throw new Error(j.error||("HTTP "+r.status));
+  if(!r.ok){ const err=new Error(j.error||("HTTP "+r.status)); err.status=r.status; err.data=j; throw err; }
   return j;
 }
 // Bounded geolocation. Without a finite timeout getCurrentPosition waits forever for a

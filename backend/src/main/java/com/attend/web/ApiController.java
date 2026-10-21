@@ -52,7 +52,7 @@ public class ApiController {
     if(s==null) return ResponseEntity.status(404).body(Map.of("error","no such session"));
     boolean expired = Instant.now().isAfter(s.endsAt);
     return Map.of("subject",s.subject,"endsAt",s.endsAt.toString(),
-      "serverNow",Instant.now().toString(),"expired",expired);
+      "serverNow",Instant.now().toString(),"expired",expired,"radiusMeters",s.radiusMeters);
   }
   @PostMapping("/api/attendance")
   public ResponseEntity<?> mark(@RequestHeader(value="X-User-Token",required=false) String tok,
@@ -67,7 +67,7 @@ public class ApiController {
       return ResponseEntity.status(409).body(Map.of("error","already marked"));
     double lat=Double.parseDouble(String.valueOf(b.get("lat"))), lng=Double.parseDouble(String.valueOf(b.get("lng")));
     double d = geo.meters(s.classroomLat,s.classroomLng,lat,lng);
-    if(d > s.radiusMeters) return ResponseEntity.status(422).body(Map.of("error","out of range","distanceMeters",d));
+    if(d > s.radiusMeters) return ResponseEntity.status(422).body(Map.of("error","out of range","distanceMeters",d,"radiusMeters",s.radiusMeters));
     AttendanceRecord r = new AttendanceRecord(); r.sessionId=s.id; r.studentId=u.id; r.lat=lat; r.lng=lng; r.distanceMeters=d;
     try{ records.save(r); }catch(Exception e){ return ResponseEntity.status(409).body(Map.of("error","already marked")); }
     return ResponseEntity.ok(Map.of("ok",true,"distanceMeters",d));

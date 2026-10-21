@@ -17,8 +17,12 @@
 <script src="config.js"></script><script src="app.js"></script>
 <script>needLogin("STUDENT");
 const tok=new URLSearchParams(location.search).get("s");
+let radius=null;
+const fmt=d=>d>=1000?(d/1000).toFixed(1)+" km":Math.round(d)+" m";
 async function init(){ if(!tok){s.textContent="No session code. Scan the professor's QR first.";go.disabled=true;return;}
- try{const j=await api("/api/sessions/"+tok);s.innerHTML=`<span class="token">${j.subject}</span> — ends <span class="num">${j.endsAt}</span>${j.expired?" (EXPIRED)":""}`;
+ try{const j=await api("/api/sessions/"+tok);
+ radius=j.radiusMeters||null;
+ s.innerHTML=`<span class="token">${j.subject}</span> — ends <span class="num">${j.endsAt}</span>${radius?` · radius <span class="num">${radius} m</span>`:""}${j.expired?" (EXPIRED)":""}`;
  if(j.expired) go.disabled=true;}
  catch(e){s.textContent=e.message+". Ask the professor for a fresh QR.";go.disabled=true;}}
 async function mark(){
@@ -35,9 +39,16 @@ async function mark(){
  m.textContent="Submitting…";
  try{
   const j=await api("/api/attendance",{method:"POST",body:JSON.stringify({sessionToken:tok,lat:p.coords.latitude,lng:p.coords.longitude})});
-  m.textContent=`Present. ${Math.round(j.distanceMeters)}m from classroom.`;
+  m.textContent=`Present. ${fmt(j.distanceMeters)} from classroom.`;
  }catch(e2){
-  m.textContent="Not marked: "+e2.message+". Move inside the classroom radius and try again.";
+  const d=e2.data&&typeof e2.data.distanceMeters==="number"?e2.data.distanceMeters:null;
+  const allowed=e2.data&&e2.data.radiusMeters!=null?e2.data.radiusMeters:radius;
+  if(d!==null){
+   const acc=p.coords.accuracy>=100?` Your GPS is only accurate to ±${Math.round(p.coords.accuracy)} m.`:"";
+   m.textContent=`Not marked: you are ${fmt(d)} from the classroom`+(allowed!=null?` (allowed ${allowed} m)`:``)+`.${acc} Move closer and try again.`;
+  } else {
+   m.textContent="Not marked: "+e2.message+".";
+  }
  }finally{ go.disabled=false; }
 }
 init();</script></body></html>

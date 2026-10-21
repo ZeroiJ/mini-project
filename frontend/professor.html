@@ -40,7 +40,7 @@ async function start(){
  <div class="qr"><img width="220" height="220" alt="QR code for student check-in" src="https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(j.qrUrl)}"></div>
  <p><a href="${j.qrUrl}">${j.qrUrl}</a></p><p class="countdown" id="cd" role="status"></p>
  <div class="btn-row"><button class="btn btn-quiet" onclick="load()">Refresh list</button>
- <a class="btn btn-quiet" href="${API_BASE}/api/sessions/${sid}/records?format=csv">CSV</a></div><ul class="records" id="list"></ul>`;
+ <a class="btn btn-quiet" href="${API_BASE}/api/sessions/${sid}/records?format=csv&token=${encodeURIComponent(localStorage.getItem("token")||"")}">CSV</a></div><ul class="records" id="list"></ul>`;
  const end=new Date(j.endsAt).getTime();
  clearInterval(timer); timer=setInterval(()=>{const s=Math.max(0,Math.round((end-Date.now())/1000));document.getElementById("cd").textContent=s>0?("closes in "+s+"s"):"closed";if(s<=0)clearInterval(timer)},1000);
  load();

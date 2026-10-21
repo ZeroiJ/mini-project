@@ -23,7 +23,7 @@ public class ApiController {
   @PostMapping("/api/auth/login")
   public ResponseEntity<?> login(@RequestBody Map<String,String> b){
     var u = users.findByIdentifier(b.getOrDefault("identifier","")).orElse(null);
-    if(u==null || !u.passwordHash.equals(b.getOrDefault("password","")))
+    if(u==null || !auth.verify(b.getOrDefault("password",""),u.passwordHash))
       return ResponseEntity.status(401).body(Map.of("error","invalid credentials"));
     return ResponseEntity.ok(Map.of("token",auth.issue(u.id,u.role),"id",u.id,"name",u.name,"role",u.role));
   }
@@ -74,9 +74,11 @@ public class ApiController {
   }
   @GetMapping("/api/sessions/{id}/records")
   public ResponseEntity<?> list(@RequestHeader(value="X-User-Token",required=false) String tok,
+      @RequestParam(value="token",required=false) String qtok,
       @PathVariable Long id,
       @RequestParam(value="format",required=false) String format){
-    User u = me(tok);
+    // Header is primary; ?token= is a fallback so a plain <a href="...?format=csv"> link works.
+    User u = me(tok!=null && !tok.isBlank() ? tok : qtok);
     if(u==null) return ResponseEntity.status(401).body(Map.of("error","login required"));
     if(!"PROFESSOR".equals(u.role)) return ResponseEntity.status(403).body(Map.of("error","professor only"));
     var out = new ArrayList<Map<String,Object>>();

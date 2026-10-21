@@ -1,2 +1,4 @@
 backend/target/
 .impeccable/
+# Deployment state written by scripts/azure-setup-wizard.sh (VM IP, key path)
+.env

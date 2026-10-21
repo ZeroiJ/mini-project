@@ -5,7 +5,7 @@ Phone (student) --HTTPS--> Cloudflare Pages (static HTML/JS)
         |                         | fetch API_BASE
         +---> QR: /student.html?s=TOKEN
                                           |
-Cloudflare DNS/HTTPS --> Spring Boot (Render) --> MySQL (Aiven/Railway, H2 locally)
+Cloudflare DNS/HTTPS --> Spring Boot (Render) --> PostgreSQL (Supabase, H2 locally)
 ```
 
 - Workers can't run JVM, so Spring Boot stays on Render; Cloudflare hosts frontend + DNS/HTTPS (+ optional Turnstile later).

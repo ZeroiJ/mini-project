@@ -1,34 +1,32 @@
--- MVP schema (MySQL 8). H2-compatible types.
+-- Schema (PostgreSQL, e.g. Neon). JPA also creates these tables on boot
+-- (ddl-auto=update), so importing this file is optional.
 CREATE TABLE IF NOT EXISTS users (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   name VARCHAR(100) NOT NULL,
   identifier VARCHAR(100) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   role VARCHAR(20) NOT NULL
 );
 CREATE TABLE IF NOT EXISTS attendance_sessions (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  id BIGSERIAL PRIMARY KEY,
   token VARCHAR(64) NOT NULL UNIQUE,
   subject VARCHAR(100) NOT NULL,
-  classroom_lat DOUBLE NOT NULL,
-  classroom_lng DOUBLE NOT NULL,
+  classroom_lat DOUBLE PRECISION NOT NULL,
+  classroom_lng DOUBLE PRECISION NOT NULL,
   radius_meters INT NOT NULL DEFAULT 100,
-  starts_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  ends_at TIMESTAMP NOT NULL,
-  created_by BIGINT NOT NULL,
-  FOREIGN KEY (created_by) REFERENCES users(id)
+  starts_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  ends_at TIMESTAMP WITH TIME ZONE NOT NULL,
+  created_by BIGINT NOT NULL REFERENCES users(id)
 );
-CREATE INDEX idx_session_token ON attendance_sessions(token);
+CREATE INDEX IF NOT EXISTS idx_session_token ON attendance_sessions(token);
 CREATE TABLE IF NOT EXISTS attendance_records (
-  id BIGINT AUTO_INCREMENT PRIMARY KEY,
-  session_id BIGINT NOT NULL,
-  student_id BIGINT NOT NULL,
-  lat DOUBLE NOT NULL,
-  lng DOUBLE NOT NULL,
-  distance_meters DOUBLE NOT NULL,
+  id BIGSERIAL PRIMARY KEY,
+  session_id BIGINT NOT NULL REFERENCES attendance_sessions(id),
+  student_id BIGINT NOT NULL REFERENCES users(id),
+  lat DOUBLE PRECISION NOT NULL,
+  lng DOUBLE PRECISION NOT NULL,
+  distance_meters DOUBLE PRECISION NOT NULL,
   status VARCHAR(20) NOT NULL DEFAULT 'PRESENT',
-  submitted_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_session_student (session_id, student_id),
-  FOREIGN KEY (session_id) REFERENCES attendance_sessions(id),
-  FOREIGN KEY (student_id) REFERENCES users(id)
+  submitted_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT uq_session_student UNIQUE (session_id, student_id)
 );

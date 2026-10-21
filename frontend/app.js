@@ -8,6 +8,17 @@ async function api(path, opts={}){
   if(!r.ok) throw new Error(j.error||("HTTP "+r.status));
   return j;
 }
+// Bounded geolocation. Without a finite timeout getCurrentPosition waits forever for a
+// high-accuracy fix (spec default is Infinity), which is what left "Locating…" stuck.
+// High accuracy first; on timeout fall back to the fast network/cached fix.
+function getPosition(){
+  const once = o => new Promise((res, rej) => navigator.geolocation.getCurrentPosition(res, rej, o));
+  return once({enableHighAccuracy:true, timeout:8000, maximumAge:30000})
+    .catch(err => {
+      if(err && err.code === 1) throw err;   // permission denied: retrying cannot help
+      return once({enableHighAccuracy:false, timeout:6000, maximumAge:300000});
+    });
+}
 function needLogin(role){
   const t = localStorage.getItem("token"), r = localStorage.getItem("role");
   if(!t){ location.href="login.html"; return null; }

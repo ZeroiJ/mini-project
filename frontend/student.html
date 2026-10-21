@@ -21,10 +21,23 @@ async function init(){ if(!tok){s.textContent="No session code. Scan the profess
  try{const j=await api("/api/sessions/"+tok);s.innerHTML=`<span class="token">${j.subject}</span> — ends <span class="num">${j.endsAt}</span>${j.expired?" (EXPIRED)":""}`;
  if(j.expired) go.disabled=true;}
  catch(e){s.textContent=e.message+". Ask the professor for a fresh QR.";go.disabled=true;}}
-function mark(){const m=document.getElementById("m");m.hidden=false;m.textContent="Locating…";
- document.getElementById("e").textContent="";
- navigator.geolocation.getCurrentPosition(async p=>{
-  try{const j=await api("/api/attendance",{method:"POST",body:JSON.stringify({sessionToken:tok,lat:p.coords.latitude,lng:p.coords.longitude})});
-  m.textContent=`Present. ${Math.round(j.distanceMeters)}m from classroom.`;}
-  catch(e){m.textContent="Not marked: "+e.message+". Move inside the classroom radius and try again.";}},()=>{m.hidden=true;document.getElementById("e").textContent="GPS denied. Allow location for this site and try again.";},{enableHighAccuracy:true});}
+async function mark(){
+ const m=document.getElementById("m"),e=document.getElementById("e");
+ e.textContent="";m.hidden=false;go.disabled=true;m.textContent="Locating… allow location if prompted";
+ let p;
+ try{ p=await getPosition(); }
+ catch(err){
+  go.disabled=false;
+  if(err&&err.code===1){ m.hidden=true; e.textContent="GPS denied. Allow location for this site, then try again."; }
+  else { m.textContent="No GPS fix. Turn location on and try again."; }
+  return;
+ }
+ m.textContent="Submitting…";
+ try{
+  const j=await api("/api/attendance",{method:"POST",body:JSON.stringify({sessionToken:tok,lat:p.coords.latitude,lng:p.coords.longitude})});
+  m.textContent=`Present. ${Math.round(j.distanceMeters)}m from classroom.`;
+ }catch(e2){
+  m.textContent="Not marked: "+e2.message+". Move inside the classroom radius and try again.";
+ }finally{ go.disabled=false; }
+}
 init();</script></body></html>

@@ -19,7 +19,7 @@
 </div>
 <div class="btn-row">
 <button class="btn" onclick="start()">Start + show QR</button>
-<button class="btn btn-quiet" onclick="navigator.geolocation.getCurrentPosition(p=>{lat.value=p.coords.latitude;lng.value=p.coords.longitude})">Use my location</button>
+<button class="btn btn-quiet" onclick="useMyLocation()">Use my location</button>
 </div>
 <p id="e" class="error" role="alert"></p>
 </div>
@@ -30,6 +30,12 @@
 </main>
 <script src="config.js"></script><script src="app.js"></script>
 <script>needLogin("PROFESSOR"); let sid=null,timer=null;
+async function useMyLocation(){
+ const e=document.getElementById("e");
+ e.textContent="Locating…";
+ try{ const p=await getPosition(); lat.value=p.coords.latitude; lng.value=p.coords.longitude; e.textContent=""; }
+ catch(err){ e.textContent = err&&err.code===1 ? "GPS denied. Allow location for this site." : "No GPS fix. Enter the coordinates manually."; }
+}
 async function start(){
  document.getElementById("e").textContent="";
  try{

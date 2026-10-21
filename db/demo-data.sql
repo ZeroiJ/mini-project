@@ -38,7 +38,7 @@ WHERE NOT EXISTS (
 
 -- 2) Fifteen check-ins. Coordinates are offset from the classroom by the
 --    recorded distance (northwards), so distance and coordinates agree.
---    Attendance pattern: s1 attended all six, s2 five, s3 three.
+--    Attendance pattern: s1 attended all six, s2 five, s3 four.
 INSERT INTO attendance_records
   (session_id, student_id, lat, lng, distance_meters, status, submitted_at)
 SELECT s.id, u.id,
